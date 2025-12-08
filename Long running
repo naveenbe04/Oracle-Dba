@@ -1,0 +1,16 @@
+SET LINES 200
+COL username FOR A15
+COL sql_id FOR A15
+
+SELECT
+    s.sid,
+    s.serial#,
+    s.username,
+    s.status,
+    q.sql_id,
+    q.sql_text
+FROM v$session s
+JOIN v$sql q ON s.sql_id = q.sql_id
+WHERE s.status = 'ACTIVE'
+AND s.username IS NOT NULL
+ORDER BY s.last_call_et DESC;
