@@ -1,0 +1,38 @@
+##script to check MWA Process information..
+export logfile=/u01/temp/log/MWA.txt
+export htmlfile=/u01/temp/log/MWA_check.html
+echo "<html>" >$htmlfile
+echo "<body>" >>$htmlfile
+# Table 1
+NODE_HOSTNAME_21=`hostname`
+MWAC=$(ps -ef |grep mwa | wc -l)
+echo $MWAC
+if [ $MWAC -ne 6 ]then
+uppercase_hostname=$(echo "$NODE_HOSTNAME_21" | tr '[:lower:]' '[:upper:]')
+echo "<text> <h3><u>MWA ports,count and Dispatcher </u></h3> </text>" >>$htmlfile
+echo "<br>" >> $htmlfile
+echo "<table border=1 width=60% bgcolor=#8FBC8F >" >>$htmlfile
+echo "<tr><td><b>$uppercase_hostname</b></td></tr>" >>$htmlfile
+echo "MWA_count:" "$(ps -ef |grep mwa | wc -l)" >> $logfile
+echo "MWA_Dispatcher.process:" $(ps -fu $USER |grep -i mwa |grep -i start_dispatcher 
+|awk '{print $11}')>>$logfile
+echo "MWA_Ports:" $(ps -fu $USER |grep -i mwa |awk '{print $21}'|sort -n |uniq |tail -
+3 |head -4|sed -e 's/$/,/' -e '$s/,$//'| tr -d '[:space:]') >>$logfile
+#echo "MWA CONTEXT FILE Ports:" $(grep MSCA Dispatcher Port $CONTEXT_FILE |grep -Eo 
+"[0-9]+" |tail -1)>>$logfile
+echo "MWAcfg_fs1_ports:" $(grep mwa.Dispatcher=${HOST} 
+/u01/app/appebs/fs1/inst/apps/${ORACLE_SID}_${HOST}/admin/install/mwa.cfg) >>$logfile
+echo "MWAcfg_fs2_ports:" $(grep mwa.Dispatcher=${HOST} 
+/u01/app/appebs/fs2/inst/apps/${ORACLE_SID}_${HOST}/admin/install/mwa.cfg)>>$logfile
+cat $logfile | awk -F ':' 'BEGIN{print "<style>table { margin: 0; }</style>"} {if 
+(NR%6==1) print "<table border=1 width=60% bgcolor=#F8F8FF>"; printf "<tr>"; for(i=1; 
+i<=NF; i++) { if(i==1) printf "<td align=\"left\">%s</td>", $i; else if(i==2) printf 
+"<td align=\"left\">%s", $i; else printf ":%s", $i; } print "</td></tr>"; if (NR%6==0) 
+print "</table>"} END{ print "</table>"}' NRs=$(cat $logfile | wc -l) >>$htmlfile
+echo "</body>" >>$htmlfile
+echo "</html>" >>$htmlfile
+find /u01/temp/log -type f -name "MWA_check.html" -exec 
+/u01/temp/send_mwa_to_dbas_new.sh {} \;
+fi
+rm -rf /u01/temp/log/MWA_check.html
+rm -rf /u01/temp/log/MWA.txt
