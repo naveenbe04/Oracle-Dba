@@ -1,0 +1,8 @@
+col target_name format a30
+col host_name format a30
+col availability_status format a20
+set tab off pages 9999 lines 222 trimspool on echo off feedb off veri off;
+select mt.target_name, mt.host_name, ac.availability_status
+from sysman.mgmt_targets mt, sysman.mgmt$availability_current ac
+where mt.target_guid = ac.target_guid and ac.target_type = 'oracle_emd'
+and ac.availability_status <> 'Target Up' order by 1,2,3;
